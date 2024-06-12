@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Expenses - Expense Tracker</title>
+    <style>body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+     
+            background-color: #899bbe;
+    
+    }
+
+    
+    .container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1, h2 {
+        text-align: center;
+    }
+    
+    .filter-options {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .filter-options button {
+        padding: 8px 20px;
+        margin: 0 10px;
+        background-color: #3e6fa4;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .filter-options button:hover {
+        background-color: #0056b3;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    table th, table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    th {
+        background-color:#3e6fa4;
+        color: #fff;
+    }
+    
+    tbody tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+    
+    tbody tr:hover {
+        background-color: #e2e2e2;
+    }
+    
+    .actions-cell button {
+        padding: 6px 12px;
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .actions-cell button:hover {
+        background-color: #c82333;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>All Expenses</h1>
+        <h2>Your Expenses, <%= user.name %></h2>
+        
+        <!-- Filter options -->
+        <div class="filter-options">
+            <button onclick="filterByDate()">Filter by Date</button>
+            <button onclick="filterByCategory()">Filter by Category</button>
+        </div>
+
+        <div id="expensesTable">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Actions</th> <!-- Add this line for the Actions column -->
+                    </tr>
+                </thead>
+                <tbody id="expensesTableBody">
+                    <!-- Rows for displaying expenses will be added here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Function to fetch and display all expenses
+        async function fetchAndDisplayAllExpenses() {
+            try {
+                const response = await fetch('/expenses');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch expenses');
+                }
+                const expenses = await response.json();
+                displayExpenses(expenses);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Function to display expenses in a table
+        /*function displayExpenses(expenses) {
+            const expensesTable = document.getElementById('expensesTable');
+            expensesTable.innerHTML = ''; // Clear previous content
+
+            if (expenses.length === 0) {
+                expensesTable.textContent = 'No expenses found.';
+            } else {
+                const table = document.createElement('table');
+                const headerRow = table.insertRow();
+                headerRow.innerHTML = '<th>Date</th><th>Category</th><th>Description</th><th>Amount</th>';
+
+                expenses.forEach(expense => {
+                    const row = table.insertRow();
+                    // Get the date from the created_at column
+                    const date = new Date(expense.created_at).toLocaleDateString();
+                    row.innerHTML = `<td>${date}</td><td>${expense.category}</td><td>${expense.description}</td><td>${expense.amount}</td>`;
+                });
+                expensesTable.appendChild(table);
+            }
+        }*/
+        // Function to display expenses in a table
+function displayExpenses(expenses) {
+    const expensesTable = document.getElementById('expensesTable');
+    expensesTable.innerHTML = ''; // Clear previous content
+
+    if (expenses.length === 0) {
+        expensesTable.textContent = 'No expenses found.';
+    } else {
+        const table = document.createElement('table');
+        const headerRow = table.insertRow();
+        headerRow.innerHTML = '<th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th>'; // Add Actions column header
+
+        expenses.forEach(expense => {
+            const row = table.insertRow();
+            // Get the date from the created_at column
+            const date = new Date(expense.created_at).toLocaleDateString();
+            row.innerHTML = `<td>${date}</td><td>${expense.category}</td><td>${expense.description}</td><td>${expense.amount}</td>`;
+            
+            // Add Edit and Delete buttons
+            const actionsCell = row.insertCell();
+            //const editButton = document.createElement('button');
+            //editButton.textContent = 'Edit';
+            //editButton.onclick = () => openEditModal(expense);
+            //actionsCell.appendChild(editButton);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = () => deleteExpense(expense.id);
+            actionsCell.appendChild(deleteButton);
+        });
+        expensesTable.appendChild(table);
+    }
+}
+
+
+        // Function to filter expenses by date
+        async function filterByDate() {
+            try {
+                const response = await fetch(`/allexpenses/filterByDate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: '<%= user.id %>' }) // Pass user_id to the backend
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch expenses by date');
+                }
+                const expenses = await response.json();
+                displayExpenses(expenses);
+                currentFilter = 'date';
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Function to filter expenses by category
+        async function filterByCategory() {
+            try {
+                const response = await fetch(`/allexpenses/filterByCategory`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: '<%= user.id %>' }) // Pass user_id to the backend
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch expenses by category');
+                }
+                const expenses = await response.json();
+                displayExpenses(expenses);
+                currentFilter = 'category';
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        // Function to open edit modal with expense details
+        function openEditModal(expense) {
+    // Assuming you have a modal with ID 'editExpenseModal'
+    const modal = document.getElementById('editExpenseModal');
+    // Populate modal fields with expense details
+    modal.querySelector('#categoryInput').value = expense.category;
+    modal.querySelector('#descriptionInput').value = expense.description;
+    modal.querySelector('#amountInput').value = expense.amount;
+    // Show modal
+    modal.style.display = 'block';
+}
+/*async function deleteExpense(expenseId) {
+    try {
+        const response = await fetch(`/deleteExpense`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: expenseId }) 
+        });
+        if (!response.ok) {
+            throw new Error('Failed to delete expense');
+        }
+        // Remove the expense row from the table only if it exists
+        const expenseRow = document.getElementById(`expense-${expenseId}`);
+        if (expenseRow) {
+            expenseRow.remove();
+        }
+        // Show success message
+        alert('Expense deleted successfully');
+    } catch (error) {
+        console.error(error);
+        // Show error message
+        alert('Failed to delete expense');
+    }
+}*/
+async function deleteExpense(expenseId) {
+    try {
+        const response = await fetch(`/deleteExpense`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: expenseId }) 
+        });
+        if (!response.ok) {
+            throw new Error('Failed to delete expense');
+        }
+        const result = await response.json(); // Parse response JSON
+        if (result.success) {
+            if (currentFilter === 'date') {
+                filterByDate();
+            } else if (currentFilter === 'category') {
+                filterByCategory();
+            }
+            // Remove the expense row from the table only if it exists
+            const expenseRow = document.getElementById(`expense-${expenseId}`);
+            if (expenseRow) {
+                expenseRow.remove();
+            }
+            // Show success message
+            alert('Expense deleted successfully');
+        } else {
+            throw new Error('Failed to delete expense');
+        }
+    } catch (error) {
+        console.error(error);
+        // Show error message
+        alert('Failed to delete expense');
+    }
+}
+
+
+
+        // Fetch and display all expenses when the page loads
+        //fetchAndDisplayAllExpenses();
+    </script>
+</body>
+</html>
