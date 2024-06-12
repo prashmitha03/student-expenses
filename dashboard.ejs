@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Expense Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Resetting default margin and padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #4f658d;
+        }
+
+        /* Container styles */
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Heading styles */
+        h1 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+          
+    
+        /* Button styles */
+        .options {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .options a {
+            padding: 15px 20px;
+            margin: 0 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 20px;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .options a:hover {
+            background-color: #ddd;
+        }
+
+        /* User information styles */
+        .user-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .user-info p {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .user-info a {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .user-info a:hover {
+            background-color: #ddd;
+        }
+
+        /* Expense form styles */
+        .expense-form {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .expense-form h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .expense-form select,
+        .expense-form input[type="text"],
+        .expense-form input[type="number"],
+        .expense-form button {
+            padding: 12px;
+            font-size: 18px;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            transition: border-color 0.3s ease;
+        }
+
+        .expense-form select:focus,
+        .expense-form input[type="text"]:focus,
+        .expense-form input[type="number"]:focus {
+            outline: none;
+            border-color: #4d62db;
+        }
+
+        .expense-form button[type="submit"] {
+            background-color: #4c66af;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .expense-form button[type="submit"]:hover {
+            background-color: #6077a9;
+        }
+
+        #successMessage {
+            display: none;
+            text-align: center;
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px 0;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard</h1>
+        
+        <div class="user-info">
+            <p>Welcome, <%= user.name %></p>
+            <hr><hr><br><br>
+            <a href="/update">Update Account</a>
+            <a href="/delete">Delete Account</a>
+            <a href="/allexpenses">All Expenses</a>
+            <a href="/logout">Logout</a>
+        </div>
+        
+        
+        <div class="expense-form">
+            <form id="expense-form">
+                <h2>Add Expense</h2>
+                <select name="category" required>
+                    <option value="" disabled selected>Select Category</option>
+                    <option value="food">Food</option>
+                    <option value="transport">Transport</option>
+                    <option value="utilities">Utilities</option>
+                   <option value="Collegefee">College Fee</option>
+                   <option value="travel">Travel</option>
+                   <option value="sports">Sports and gym</option>
+                  <option value="Other">Other</option>
+
+                </select>
+                <input type="text" placeholder="Description" name="description" required>
+                <input type="number" placeholder="Amount" name="amount" required>
+                <button type="submit">Add Expense</button>
+            </form>
+        </div>
+        <div id="successMessage">
+            Expense added successfully!
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Event listener for the expense form submission
+            document.getElementById('expense-form').addEventListener('submit', async (event) => {
+                event.preventDefault(); // Prevent the default form submission
+                
+                // Get expense data from the form
+                const category = document.querySelector('select[name="category"]').value;
+                const description = document.querySelector('input[name="description"]').value;
+                const amount = document.querySelector('input[name="amount"]').value;
+
+                // Send POST request to add expense
+                try {
+                    const response = await fetch('/expenses', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ category, description, amount })
+                    });
+                    
+                    if (response.ok) {
+                        // Expense added successfully
+                        document.getElementById('successMessage').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('successMessage').style.display = 'none';
+                        }, 3000); // Hide the message after 3 seconds
+                    } else {
+                        // Handle error
+                        console.error('Failed to add expense:', response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Error adding expense:', error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
